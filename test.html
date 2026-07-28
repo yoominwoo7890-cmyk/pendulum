@@ -8,7 +8,7 @@
 :root{
   --paper:#E9EBE5; --panel:#F5F6F2; --line:#CFD5CD;
   --ink:#1E2320; --ink-2:#6A726B;
-  --ok:#1D6E6E; --bad:#B23A2E; --warn:#8A5A00;
+  --ok:#1D6E6E; --bad:#B23A2E;
   --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,"Noto Sans KR",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
 }
@@ -37,7 +37,6 @@ button.ghost{background:transparent;color:var(--ink)}
   font-variant-numeric:tabular-nums}
 .msg{padding:11px 13px;border-radius:4px;font-size:13.5px;margin-bottom:10px}
 .msg.bad{background:var(--bad);color:#fff}
-.msg.good{background:var(--ok);color:#fff}
 .hint{font-size:12.5px;color:var(--ink-2);line-height:1.6;margin-top:14px}
 </style>
 </head>
@@ -46,7 +45,6 @@ button.ghost{background:transparent;color:var(--ink)}
 <h1>연결 시험 · 본 앱과 별개입니다</h1>
 <div id="msg"></div>
 
-<!-- 시작 화면 -->
 <div class="card" id="setup">
   <label for="code">방 코드 (양쪽이 같아야 합니다)</label>
   <input id="code" value="1" inputmode="numeric" autocomplete="off">
@@ -56,7 +54,6 @@ button.ghost{background:transparent;color:var(--ink)}
   </div>
 </div>
 
-<!-- 동작 화면 -->
 <div class="card" id="live" hidden>
   <div class="k"><span class="dot" id="dot"></span><span id="state">연결 중…</span></div>
   <div class="big" id="num">—</div>
@@ -69,18 +66,24 @@ button.ghost{background:transparent;color:var(--ink)}
 <p class="hint" id="hint"></p>
 
 <script>
-/* 8초 안에 Firebase가 안 뜨면 알려줍니다 */
-let booted = false;
-setTimeout(() => { if (!booted) msg('Firebase 파일을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.', 'bad'); }, 8000);
+/* 두 script 가 같은 값을 보도록 window 에 직접 답니다.
+   (예전 버그: let 으로 선언하면 module script 에서 안 보입니다) */
+window.FB_OK = false;
 
-function msg(text, kind){
+function msg(text){
   const b = document.getElementById('msg');
   b.innerHTML = '';
   const d = document.createElement('div');
-  d.className = 'msg ' + (kind || 'bad');
+  d.className = 'msg bad';
   d.textContent = text;
   b.appendChild(d);
 }
+function clearMsg(){ document.getElementById('msg').innerHTML = ''; }
+
+setTimeout(() => {
+  if (!window.FB_OK) msg('Firebase 파일을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
+}, 8000);
+
 window.addEventListener('error', e => msg('오류: ' + e.message));
 window.addEventListener('unhandledrejection', e => msg('오류: ' + e.reason));
 </script>
@@ -106,7 +109,8 @@ let db, offset = 0;
 
 try{
   db = getDatabase(initializeApp(CFG));
-  window.booted = true;
+  window.FB_OK = true;
+  clearMsg();
   /* 서버 시계와의 차이 — 지연 시간을 대략 재는 데 씁니다 */
   onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
   /* Firebase 서버와 붙어 있는지 */
@@ -130,20 +134,19 @@ function start(role){
 
   if (role === 'send'){
     document.title = '송신부';
-    $('k1').textContent = '보낸 횟수';
-    $('k2').textContent = '초당';
+    $('k1').textContent = '성공한 쓰기 (누적)';
+    $('k2').textContent = '초당 쓰기';
     $('hint').textContent =
-      '이 화면은 0.3초마다 숫자를 하나씩 올려 보냅니다. 다른 기기에서 같은 코드로 수신부를 열어 보세요.';
-    let n = 0, sent = 0;
+      '0.3초마다 숫자를 하나씩 올려 보냅니다. 다른 기기에서 같은 코드로 수신부를 열어 보세요.';
+    let n = 0, total = 0, perSec = 0;
     setInterval(() => {
       n++;
-      set(ref(db, path), {n:n, t:now()})
-        .then(() => { sent++; })
-        .catch(err => msg('쓰기 거부됨: ' + err.message));
       $('num').textContent = n;
-      $('v1').textContent = sent;
+      set(ref(db, path), {n:n, t:now()})
+        .then(() => { total++; perSec++; $('v1').textContent = total; })
+        .catch(err => msg('쓰기 거부됨: ' + err.message));
     }, 300);
-    setInterval(() => { $('v2').textContent = sent; sent = 0; }, 1000);
+    setInterval(() => { $('v2').textContent = perSec; perSec = 0; }, 1000);
 
   } else {
     document.title = '수신부';
@@ -151,17 +154,18 @@ function start(role){
     $('k2').textContent = '지연 (대략)';
     $('hint').textContent =
       '숫자가 계속 올라가면 성공입니다. 멈춰 있으면 송신부가 꺼졌거나 방 코드가 다릅니다.';
-    let got = 0, lag = 0, seen = false;
+    let perSec = 0, seen = false;
     onValue(ref(db, path), s => {
       const v = s.val();
       if (!v) return;
-      seen = true; got++;
-      lag = Math.max(0, now() - v.t);
+      seen = true; perSec++;
       $('num').textContent = v.n;
-      $('v2').textContent = lag + ' ms';
+      $('v2').textContent = Math.max(0, now() - v.t) + ' ms';
     }, err => msg('읽기 거부됨: ' + err.message));
-    setInterval(() => { $('v1').textContent = got; got = 0; }, 1000);
-    setTimeout(() => { if (!seen) msg('아직 아무것도 안 들어옵니다. 송신부가 켜져 있는지, 방 코드가 같은지 확인하세요.', 'bad'); }, 6000);
+    setInterval(() => { $('v1').textContent = perSec; perSec = 0; }, 1000);
+    setTimeout(() => {
+      if (!seen) msg('아직 아무것도 안 들어옵니다. 송신부가 켜져 있는지, 방 코드가 같은지 확인하세요.');
+    }, 6000);
   }
 }
 </script>
