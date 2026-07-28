@@ -353,6 +353,33 @@ const G = 9.80665;
 let recording = false, t0 = 0;
 let rows = [], ring = [];
 let live = {mag:1, x:0, y:0, z:0, w:0};
+/* 그래프 오른쪽 끝이 가리키는 시각. 마지막 샘플이 아니라 이 값을 씁니다.
+   덕분에 데이터가 뭉쳐 도착해도 화면은 일정한 속도로 흐릅니다. */
+let viewNow = performance.now();
+
+/* ── 수신부 재생 버퍼 ──────────────────────────────────────
+   송신부는 0.2초마다 12개씩 묶어 보냅니다. 받자마자 전부 그리면
+   초당 5번만 갱신되어 뚝뚝 끊깁니다. 그래서 큐에 담아 두었다가
+   0.35초 늦은 시계로 원래 속도대로 한 개씩 풀어냅니다.        */
+let isRecv = false, queue = [], playT = null, lastFrame = performance.now();
+const BUFFER = 350;
+
+function playback(dt){
+  if (!queue.length && playT === null) return;
+  const newest = queue.length ? queue[queue.length-1].t : playT;
+  if (playT === null) playT = newest - BUFFER;
+
+  playT += dt;                            // 실시간 속도로 전진
+  const err = (newest - BUFFER) - playT;  // 버퍼 두께를 유지하도록 보정
+  if (Math.abs(err) > 2000) playT = newest - BUFFER;   // 크게 어긋나면 점프
+  else playT += err * Math.min(dt/1000, 0.05);         // 아니면 서서히
+
+  while (queue.length && queue[0].t <= playT){
+    const s = queue.shift();
+    recording = s.r;
+    feed(s.t, s.mag, s.x, s.y, s.z, s.w);
+  }
+}
 
 function feed(tMs, mag, x, y, z, w){
   live = {mag, x, y, z, w};
@@ -631,6 +658,7 @@ function startSender(){
    기준을 다시 잡습니다.                                       */
 function startReceiver(){
   let run = 0, lastSeen = 0, senderRec = false, anchor = null;
+  isRecv = true;
 
   function localTime(sT){
     const now = performance.now();
@@ -647,12 +675,14 @@ function startReceiver(){
   onValue(ref(db, `rooms/${ROOM}/data`), s => {
     const d = s.val(); if (!d || !d.v) return;
     lastSeen = Date.now();
-    recording = d.r === 1;
+    const rec = d.r === 1;
     for (const line of d.v.split(';')){
       const p = line.split(',');
       if (p.length < 6) continue;
-      feed(localTime(parseFloat(p[0])*1000), +p[1], +p[2], +p[3], +p[4], +p[5]);
+      queue.push({t:localTime(parseFloat(p[0])*1000), mag:+p[1],
+                  x:+p[2], y:+p[3], z:+p[4], w:+p[5], r:rec});
     }
+    if (queue.length > 3000) queue.splice(0, queue.length - 3000);
   }, err => banner('수신 거부됨: ' + err.message));
 
   onValue(ref(db, `rooms/${ROOM}/state`), s => {
@@ -781,7 +811,7 @@ function grid(ctx, d, refV, map, txt){
 }
 function trace(ctx, d, color, pick, map, head){
   if (ring.length < 2) return;
-  const now = ring[ring.length-1].t;
+  const now = viewNow;
   ctx.strokeStyle = color; ctx.lineWidth = 1.6;
   ctx.lineJoin = 'round'; ctx.setLineDash([]);
   ctx.beginPath();
@@ -801,7 +831,7 @@ function trace(ctx, d, color, pick, map, head){
 function marks(ctx, d, st, color, map, out){
   const el = $(out);
   if (!ring.length){ el.textContent = ''; return; }
-  const now = ring[ring.length-1].t;
+  const now = viewNow;
   const vis = [];
   for (const p of st.peaks) if (now - p.t <= 10000) vis.push(p);
   for (const p of vis){
@@ -862,6 +892,14 @@ function labels(){
 }
 
 function frame(){
+  const t = performance.now();
+  const dt = Math.min(t - lastFrame, 200);   // 탭이 잠들었다 돌아와도 튀지 않게
+  lastFrame = t;
+
+  if (isRecv){ playback(dt); viewNow = (playT === null) ? t : playT; }
+  else viewNow = t;
+  while (ring.length && viewNow - ring[0].t > 11000) ring.shift();
+
   if (!$('pView').hidden){
     if ((tick++ % 6) === 0) autoRange();
     labels();
