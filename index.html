@@ -23,15 +23,17 @@ body{
 h1{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-bottom:10px}
 
-/* 판독창 */
-.read{display:flex;align-items:baseline;gap:7px;padding:16px 14px 13px}
-.read .v{font-family:var(--mono);font-size:clamp(42px,14vw,58px);font-weight:500;
+/* 판독창 + 용수철 */
+.head{display:flex;align-items:center;gap:10px;padding:12px 14px 10px}
+.nums{flex:1;min-width:0}
+#spring{flex:none;width:84px;height:112px;border-left:1px solid var(--line);padding-left:0}
+.read{display:flex;align-items:baseline;gap:7px;width:100%}
+.read .v{font-family:var(--mono);font-size:clamp(38px,12vw,54px);font-weight:500;
   letter-spacing:-.035em;line-height:.85;font-variant-numeric:tabular-nums}
 .read .u{font-family:var(--mono);font-size:16px;color:var(--ink-2)}
-.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
-  padding:15px 14px 13px;width:100%}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
 .trio span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;margin-bottom:1px}
-.trio b{font-family:var(--mono);font-size:clamp(20px,6.5vw,26px);font-weight:500;
+.trio b{font-family:var(--mono);font-size:clamp(16px,5vw,24px);font-weight:500;
   letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;
   padding:10px 14px;border-top:1px solid var(--line)}
@@ -49,7 +51,8 @@ h1{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 12px}
 .lab b{font-weight:500}
 .lab .now{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 .lab em{font-style:normal;color:var(--ink-2);margin-right:7px}
-canvas{display:block;width:100%;border:1px solid var(--line);background:#FCFDFB}
+canvas{display:block;background:transparent}
+#chA,#chB{width:100%;border:1px solid var(--line);background:#FCFDFB}
 .legend{font-size:11px;color:var(--ink-2);margin:0;padding:11px 14px 12px;line-height:1.55}
 .key{display:inline-block;width:9px;height:2px;vertical-align:middle;margin:0 3px 2px 0}
 
@@ -87,10 +90,6 @@ tbody tr:nth-child(odd){background:#EFF1EC}
 th{font-size:10.5px;color:var(--ink-2);font-weight:500}
 th:first-child,td:first-child{text-align:left;padding-left:14px}
 th:last-child,td:last-child{padding-right:14px}
-#log{font-family:var(--mono);font-size:11.5px;line-height:1.7;padding:10px 14px;
-  max-height:170px;overflow-y:auto;color:var(--ink-2);white-space:pre-wrap;word-break:break-all}
-#log .e{color:var(--pen-a)}
-#log .w{color:var(--warn)}
 .banner{background:var(--warn);color:#fff;padding:11px 13px;border-radius:4px;
   font-size:13.5px;margin-bottom:10px}
 .tip{font-size:12px;color:var(--ink-2);margin:14px 2px 0;line-height:1.6}
@@ -101,15 +100,20 @@ th:last-child,td:last-child{padding-right:14px}
 <h1>진자 가속도 기록계</h1>
 <div id="banner"></div>
 
-<!-- 판독창 -->
+<!-- 판독창 + 용수철저울 -->
 <div class="card">
-  <div class="read" id="one">
-    <span class="v" id="rMag">—</span><span class="u" id="rUnit">g</span>
-  </div>
-  <div class="trio" id="three" hidden>
-    <div><span style="color:var(--ax)">AX</span><b id="rX">—</b></div>
-    <div><span style="color:var(--ay)">AY</span><b id="rY">—</b></div>
-    <div><span style="color:var(--az)">AZ</span><b id="rZ">—</b></div>
+  <div class="head">
+    <div class="nums">
+      <div class="read" id="one">
+        <span class="v" id="rMag">—</span><span class="u" id="rUnit">g</span>
+      </div>
+      <div class="trio" id="three" hidden>
+        <div><span style="color:var(--ax)">AX</span><b id="rX">—</b></div>
+        <div><span style="color:var(--ay)">AY</span><b id="rY">—</b></div>
+        <div><span style="color:var(--az)">AZ</span><b id="rZ">—</b></div>
+      </div>
+    </div>
+    <canvas id="spring"></canvas>
   </div>
   <div class="bar">
     <div class="seg" id="segU">
@@ -173,42 +177,34 @@ th:last-child,td:last-child{padding-right:14px}
   </table>
 </details>
 
-<details id="dLog"><summary><span>상태 기록</span><span id="logTag"></span></summary>
-  <div id="log"></div>
-</details>
-
-<p class="tip">화면 자동 회전을 잠그고, 폰을 케이스에 넣어 끈으로 단단히 매다세요. 진폭 30–40°에서 신호가 가장 뚜렷합니다.</p>
+<p class="tip">
+  오른쪽 용수철은 폰에 매단 가상의 용수철저울입니다. |a|에 비례해 늘어나며,
+  1주기에 두 번 튑니다.<br>
+  화면 자동 회전을 잠그고, 폰을 케이스에 넣어 끈으로 단단히 매다세요. 진폭 30–40°에서 신호가 가장 뚜렷합니다.
+</p>
 
 <script>
-/* ══ A. 상태 기록 ══════════════════════════════════════════ */
-const logEl = document.getElementById('log');
-let errN = 0;
+/* ══ A. 오류 알림 ══════════════════════════════════════════
+   오류는 맨 위 띠로 표시합니다.                              */
+function banner(msg){
+  const b = document.getElementById('banner');
+  b.innerHTML = '';
+  const d = document.createElement('div');
+  d.className = 'banner';
+  d.textContent = msg;
+  b.appendChild(d);
+}
 function log(msg, kind){
-  const t = new Date().toTimeString().slice(0,8);
-  const s = document.createElement('span');
-  if (kind) s.className = kind;
-  s.textContent = `[${t}] ${msg}\n`;
-  logEl.appendChild(s);
-  logEl.scrollTop = logEl.scrollHeight;
-  if (kind === 'e'){
-    errN++;
-    document.getElementById('logTag').textContent = '오류 ' + errN + '건';
-    document.getElementById('dLog').open = true;
-  }
+  try{ console.log(msg); }catch(e){}
+  if (kind === 'e' || kind === 'w') banner(msg);
 }
-window.addEventListener('error', e => log('오류: ' + e.message, 'e'));
-window.addEventListener('unhandledrejection', e => log('오류(비동기): ' + e.reason, 'e'));
-log('페이지 열림 · ' + navigator.userAgent.slice(0,60));
-if (!(location.protocol === 'https:' || location.hostname === 'localhost')){
-  document.getElementById('banner').innerHTML =
-    '<div class="banner">HTTPS가 아니어서 센서를 쓸 수 없습니다. https 주소로 열어 주세요.</div>';
-  log('경고: 보안 컨텍스트 아님 (' + location.protocol + ')', 'w');
-}
+window.addEventListener('error', e => banner('오류: ' + e.message));
+window.addEventListener('unhandledrejection', e => banner('오류: ' + e.reason));
+if (!(location.protocol === 'https:' || location.hostname === 'localhost'))
+  banner('HTTPS가 아니어서 센서를 쓸 수 없습니다. https 주소로 열어 주세요.');
 
 /* ══ B. 단위와 보기 방식 ═══════════════════════════════════
-   값은 항상 g 단위로 보관하고, 보여줄 때만 변환합니다.
-   |a| 는 항상 양수라 세로축이 0.4~1.6, 성분은 부호가 있어
-   0을 가운데 둔 ±1.6 을 씁니다.                              */
+   값은 항상 g 단위로 보관하고, 보여줄 때만 변환합니다.       */
 const UNITS = {
   g:   {name:'g',    k:1,       dec:3, sfx:'_g',
         mag:{lo:0.4, hi:1.6, rows:6, mid:3, txt:'1.0 g'},
@@ -218,7 +214,7 @@ const UNITS = {
         xyz:{span:16, rows:8, mid:4, txt:'0'}}
 };
 let U = UNITS.g;
-let VIEW = 'mag';                       // 'mag' 또는 'xyz'
+let VIEW = 'mag';
 const toU = v => v * U.k;
 
 document.getElementById('segU').addEventListener('click', e => {
@@ -239,18 +235,15 @@ function apply(){
   document.getElementById('one').hidden   = !isMag;
   document.getElementById('three').hidden =  isMag;
   document.getElementById('rUnit').textContent = U.name;
-
   document.getElementById('labA').textContent = isMag
     ? `가속도 크기 |a| · ${U.mag.lo}–${U.mag.hi} ${U.name}`
     : `가속도 성분 · ±${U.xyz.span} ${U.name}`;
-
   document.getElementById('legend').innerHTML = isMag
     ? '● 극대점 · 가속도는 점 간격 <b>× 2 = 주기</b>, 각속도는 점 간격 <b>= 주기</b>'
     : '<span class="key" style="background:var(--ax)"></span>ax'
     + '<span class="key" style="background:var(--ay);margin-left:12px"></span>ay'
     + '<span class="key" style="background:var(--az);margin-left:12px"></span>az'
     + '<br>성분 보기에서는 극대점을 표시하지 않습니다. 주기 계산은 |a| 로 계속 진행됩니다.';
-
   document.getElementById('th').innerHTML = isMag
     ? `<tr><th>t (s)</th><th>|a| (${U.name})</th><th>ω (°/s)</th></tr>`
     : `<tr><th>t (s)</th><th>ax</th><th>ay</th><th>az</th><th>ω</th></tr>`;
@@ -260,7 +253,7 @@ function apply(){
 const G = 9.80665;
 let sensorOn = false, recording = false, t0 = 0;
 let rows = [], ring = [];
-let live = {mag:0, x:0, y:0, z:0, w:0};
+let live = {mag:1, x:0, y:0, z:0, w:0};
 
 /* ══ D. 센서 켜기 ══════════════════════════════════════════ */
 const bStart = document.getElementById('bStart');
@@ -271,14 +264,13 @@ bStart.addEventListener('click', async () => {
   bStart.disabled = true;
   try{
     if (typeof DeviceMotionEvent === 'undefined'){
-      log('이 브라우저에는 가속도 센서 기능이 없습니다.', 'e');
+      banner('이 브라우저에는 가속도 센서 기능이 없습니다.');
       bStart.disabled = false; return;
     }
     if (typeof DeviceMotionEvent.requestPermission === 'function'){
       const res = await DeviceMotionEvent.requestPermission();
-      log('권한 응답: ' + res);
       if (res !== 'granted'){
-        log('권한 거부됨. 설정 > Safari > 동작 및 방향 접근을 켜 주세요.', 'e');
+        banner('센서 권한이 거부되었습니다. 설정 > Safari > 동작 및 방향 접근을 켜 주세요.');
         bStart.disabled = false; return;
       }
     }
@@ -287,11 +279,10 @@ bStart.addEventListener('click', async () => {
     bStart.textContent = '센서 켜짐';
     bRec.disabled = false;
     setTag('센서 켜짐');
-    log('센서 켜짐 · 기록하지 않아도 주기는 계산됩니다');
     keepAwake();
     setTimeout(() => { if (rawCount === 0)
-      log('센서 값이 들어오지 않습니다. 센서가 없는 기기일 수 있습니다.', 'w'); }, 2000);
-  }catch(err){ log('센서 켜기 실패: ' + err, 'e'); bStart.disabled = false; }
+      banner('센서 값이 들어오지 않습니다. 센서가 없는 기기일 수 있습니다.'); }, 2000);
+  }catch(err){ banner('센서 켜기 실패: ' + err); bStart.disabled = false; }
 });
 
 function setTag(txt, on){
@@ -305,10 +296,9 @@ async function keepAwake(){
   try{
     if ('wakeLock' in navigator){
       wl = await navigator.wakeLock.request('screen');
-      wl.addEventListener('release', () => { wl = null; log('화면 꺼짐 방지 해제됨', 'w'); });
-      log('화면 꺼짐 방지 켜짐');
-    } else log('화면 꺼짐 방지 미지원. 절전 시간을 늘려 주세요.', 'w');
-  }catch(err){ log('화면 꺼짐 방지 실패: ' + err, 'w'); }
+      wl.addEventListener('release', () => { wl = null; });
+    }
+  }catch(err){}
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && sensorOn && !wl) keepAwake();
@@ -322,7 +312,7 @@ function onMotion(e){
   rawCount++;
   const a = e.accelerationIncludingGravity;
   if (!a || a.x === null){
-    if (!warnedNull){ log('가속도 값이 비어 있습니다.', 'e'); warnedNull = true; }
+    if (!warnedNull){ banner('가속도 값이 비어 있습니다.'); warnedNull = true; }
     return;
   }
   const now = performance.now();
@@ -347,14 +337,13 @@ function onMotion(e){
   ring.push({t:now, mag, x, y, z, w});
   while (ring.length && now - ring[0].t > 10000) ring.shift();
 
-  /* 극대점 찾기는 보기 방식과 무관하게 |a| 로 항상 돕니다 */
   peakAccel(now, mag);
   peakGyro(now, w);
 
   if (recording){
     rows.push({t:(now-t0)/1000, mag, x, y, z, w,
                gx:r?r.alpha:null, gy:r?r.beta:null, gz:r?r.gamma:null});
-    if (rows.length === 200000){ stopRec(); log('샘플 20만 개 도달, 자동 정지.', 'w'); }
+    if (rows.length === 200000){ stopRec(); banner('샘플 20만 개에 도달해 자동 정지했습니다.'); }
   }
 }
 
@@ -441,7 +430,6 @@ function startRec(){
   bRec.textContent = '기록 정지'; bRec.classList.add('rec');
   bCsv.disabled = true;
   setTag('기록 중', true);
-  log('기록 시작');
 }
 function stopRec(){
   if (delayTimer){ clearInterval(delayTimer); delayTimer = null; }
@@ -449,7 +437,6 @@ function stopRec(){
   bRec.textContent = '기록 시작'; bRec.classList.remove('rec');
   bCsv.disabled = rows.length === 0;
   setTag(sensorOn ? '센서 켜짐' : '센서 대기');
-  log('기록 정지 · 샘플 ' + rows.length + '개');
 }
 
 /* 진동은 가속도계를 오염시키므로 소리로 알립니다 */
@@ -482,15 +469,15 @@ bCsv.addEventListener('click', () => {
     a.download = 'pendulum_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.csv';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    log('CSV 내려받기 · ' + rows.length + '줄 · 단위 ' + U.name);
-  }catch(err){ log('CSV 실패: ' + err, 'e'); }
+  }catch(err){ banner('CSV 저장 실패: ' + err); }
 });
 
 /* ══ I. 화면 그리기 ════════════════════════════════════════
    ※ 캔버스 높이는 상수로 고정하고 절대 되읽지 않습니다.       */
-const H_A = 148, H_B = 100;
+const H_A = 148, H_B = 100, H_S = 112;
 const chA = document.getElementById('chA'), ctxA = chA.getContext('2d');
 const chB = document.getElementById('chB'), ctxB = chB.getContext('2d');
+const spr = document.getElementById('spring'), ctxS = spr.getContext('2d');
 const PEN_A = '#B23A2E', PEN_B = '#1D6E6E';
 const CX = '#B23A2E', CY = '#2F7A4F', CZ = '#2F5FA0';
 
@@ -503,7 +490,7 @@ function fit(c, cssH){
   c.getContext('2d').setTransform(d, 0, 0, d, 0, 0);
   return {w:w, h:cssH};
 }
-let dimA = fit(chA, H_A), dimB = fit(chB, H_B);
+let dimA = fit(chA, H_A), dimB = fit(chB, H_B), dimS = fit(spr, H_S);
 let lastW = chA.clientWidth, rt = null;
 function refit(){
   const w = chA.clientWidth;
@@ -511,12 +498,13 @@ function refit(){
   lastW = w;
   dimA = fit(chA, H_A);
   dimB = fit(chB, H_B);
+  dimS = fit(spr, H_S);
 }
 window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(refit, 150); });
 window.addEventListener('orientationchange', () => setTimeout(refit, 300));
 window.addEventListener('load', refit);
 
-const W_MAX = 200;                       // 각속도 세로축 ±200 °/s (고정)
+const W_MAX = 200;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const mapMag = (v, d) => {
   const c = U.mag;
@@ -564,7 +552,6 @@ function trace(ctx, d, color, pick, map, head){
     ctx.closePath(); ctx.fill();
   }
 }
-/* 극대점: 점 + 아래로 내려긋는 점선 (간격이 눈에 보이도록) */
 function marks(ctx, d, st, color, map, out){
   const el = document.getElementById(out);
   if (!ring.length){ el.textContent = ''; return; }
@@ -585,6 +572,50 @@ function marks(ctx, d, st, color, map, out){
   el.textContent = vis.length >= 2
     ? '점 간격 ' + ((vis[vis.length-1].t - vis[vis.length-2].t)/1000).toFixed(3) + 's ·'
     : '';
+}
+
+/* ── 가상 용수철저울 ────────────────────────────────────────
+   용수철저울에 매달린 추는 그 기기가 받는 알짜 힘(= |a|)에
+   비례해 늘어납니다. 그래서 늘어난 길이가 곧 |a| 입니다.
+   정지 상태(1 g)를 기준선으로 두고 위아래로 움직입니다.      */
+function drawSpring(){
+  const d = dimS, ctx = ctxS;
+  ctx.clearRect(0, 0, d.w, d.h);
+  const cx = d.w/2, yTop = 10, restY = 68;
+  const yM = restY + clamp((live.mag - 1) * 46, -26, 30);
+
+  /* 천장과 빗금 */
+  ctx.strokeStyle = '#AEB6AC'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx-22, yTop); ctx.lineTo(cx+22, yTop); ctx.stroke();
+  ctx.lineWidth = 1;
+  for (let i = -21; i < 22; i += 7){
+    ctx.beginPath(); ctx.moveTo(cx+i, yTop); ctx.lineTo(cx+i-5, yTop-5); ctx.stroke();
+  }
+
+  /* 1 g 기준선 */
+  ctx.setLineDash([2,3]); ctx.strokeStyle = '#C6CCC4';
+  ctx.beginPath(); ctx.moveTo(2, restY+12); ctx.lineTo(d.w-2, restY+12); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#9AA298'; ctx.font = '9px ui-monospace, monospace';
+  ctx.fillText('1 g', 2, restY+24);
+
+  /* 코일 */
+  const yA = yTop + 3, yB = yM - 12, N = 96, coils = 7, amp = 11;
+  ctx.strokeStyle = PEN_A; ctx.lineWidth = 1.7; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(cx, yTop); ctx.lineTo(cx, yA);
+  for (let i = 1; i <= N; i++){
+    const f = i/N;
+    ctx.lineTo(cx + Math.sin(f*coils*2*Math.PI)*amp, yA + f*(yB - yA));
+  }
+  ctx.lineTo(cx, yM - 12);
+  ctx.stroke();
+
+  /* 추 */
+  ctx.fillStyle = PEN_A;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx-12, yM-12, 24, 24, 4);
+  else ctx.rect(cx-12, yM-12, 24, 24);
+  ctx.fill();
 }
 
 function frame(){
@@ -615,6 +646,8 @@ function frame(){
   grid(ctxB, dimB, 4, 2, '0');
   trace(ctxB, dimB, PEN_B, p => p.w, mapW, true);
   marks(ctxB, dimB, B, PEN_B, mapW, 'ivB');
+
+  drawSpring();
 
   if (recording){
     document.getElementById('sN').textContent = rows.length;
