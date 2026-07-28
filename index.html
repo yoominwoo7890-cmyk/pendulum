@@ -9,6 +9,7 @@
   --paper:#E9EBE5; --panel:#F5F6F2; --line:#CFD5CD;
   --ink:#1E2320; --ink-2:#6A726B;
   --pen-a:#B23A2E; --pen-b:#1D6E6E; --warn:#8A5A00;
+  --ax:#B23A2E; --ay:#2F7A4F; --az:#2F5FA0;
   --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,"Noto Sans KR",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
 }
@@ -23,30 +24,43 @@ h1{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-bottom:10px}
 
 /* 판독창 */
-.read{display:flex;align-items:baseline;gap:7px;padding:16px 14px 14px}
-.read .v{font-family:var(--mono);font-size:clamp(46px,16vw,66px);font-weight:500;
+.read{display:flex;align-items:baseline;gap:7px;padding:16px 14px 13px}
+.read .v{font-family:var(--mono);font-size:clamp(42px,14vw,58px);font-weight:500;
   letter-spacing:-.035em;line-height:.85;font-variant-numeric:tabular-nums}
-.read .u{font-family:var(--mono);font-size:17px;color:var(--ink-2)}
-.read .s{margin-left:auto;font-size:12px;color:var(--ink-2);align-self:center}
-.read .s.on{color:var(--pen-a);font-weight:500}
+.read .u{font-family:var(--mono);font-size:16px;color:var(--ink-2)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  padding:15px 14px 13px;width:100%}
+.trio span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;margin-bottom:1px}
+.trio b{font-family:var(--mono);font-size:clamp(20px,6.5vw,26px);font-weight:500;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;
+  padding:10px 14px;border-top:1px solid var(--line)}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
+.seg button{padding:5px 10px;font-size:12px;font-weight:500;border:0;border-radius:0;
+  background:transparent;color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.seg button.on{background:var(--ink);color:#fff}
+.s{font-size:12px;color:var(--ink-2);margin-left:auto}
+.s.on{color:var(--pen-a);font-weight:500}
 
 /* 기록지 */
 .chan{padding:11px 14px 0}
-.chan:last-of-type{padding-bottom:14px}
-.lab{display:flex;justify-content:space-between;align-items:baseline;
+.lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
   font-size:11.5px;color:var(--ink-2);margin-bottom:5px}
 .lab b{font-weight:500}
-.lab .now{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.lab .now{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lab em{font-style:normal;color:var(--ink-2);margin-right:7px}
 canvas{display:block;width:100%;border:1px solid var(--line);background:#FCFDFB}
+.legend{font-size:11px;color:var(--ink-2);margin:0;padding:11px 14px 12px;line-height:1.55}
+.key{display:inline-block;width:9px;height:2px;vertical-align:middle;margin:0 3px 2px 0}
 
 /* 버튼 */
 .ctrl{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
-button{font-family:var(--sans);font-size:15px;font-weight:500;padding:15px 8px;
+.ctrl button{font-family:var(--sans);font-size:15px;font-weight:500;padding:15px 8px;
   border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer}
-button.ghost{background:transparent;color:var(--ink)}
-button:disabled{opacity:.3;cursor:default}
-button.wide{grid-column:1/-1}
-button.rec{background:var(--pen-a);border-color:var(--pen-a)}
+.ctrl button.ghost{background:transparent;color:var(--ink)}
+.ctrl button:disabled{opacity:.3;cursor:default}
+.ctrl button.wide{grid-column:1/-1}
+.ctrl button.rec{background:var(--pen-a);border-color:var(--pen-a)}
 .opt{grid-column:1/-1;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2)}
 .opt input{width:18px;height:18px;accent-color:var(--pen-a);flex:none}
 
@@ -67,18 +81,12 @@ summary::-webkit-details-marker{display:none}
 summary::after{content:"▾";font-size:11px}
 details[open] summary{border-bottom:1px solid var(--line)}
 details[open] summary::after{content:"▴"}
-
-.axes{display:grid;grid-template-columns:repeat(3,1fr)}
-.axes div{padding:10px 14px}
-.axes span{display:block;font-size:10.5px;color:var(--ink-2);letter-spacing:.08em}
-.axes b{font-family:var(--mono);font-size:15px;font-weight:500;font-variant-numeric:tabular-nums}
-
 table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
-th,td{padding:5px 14px;text-align:right;font-variant-numeric:tabular-nums}
+th,td{padding:5px 10px;text-align:right;font-variant-numeric:tabular-nums}
 tbody tr:nth-child(odd){background:#EFF1EC}
 th{font-size:10.5px;color:var(--ink-2);font-weight:500}
-th:first-child,td:first-child{text-align:left}
-
+th:first-child,td:first-child{text-align:left;padding-left:14px}
+th:last-child,td:last-child{padding-right:14px}
 #log{font-family:var(--mono);font-size:11.5px;line-height:1.7;padding:10px 14px;
   max-height:170px;overflow-y:auto;color:var(--ink-2);white-space:pre-wrap;word-break:break-all}
 #log .e{color:var(--pen-a)}
@@ -93,24 +101,49 @@ th:first-child,td:first-child{text-align:left}
 <h1>진자 가속도 기록계</h1>
 <div id="banner"></div>
 
+<!-- 판독창 -->
 <div class="card">
-  <div class="read">
-    <span class="v" id="rMag">—</span><span class="u">g</span>
+  <div class="read" id="one">
+    <span class="v" id="rMag">—</span><span class="u" id="rUnit">g</span>
+  </div>
+  <div class="trio" id="three" hidden>
+    <div><span style="color:var(--ax)">AX</span><b id="rX">—</b></div>
+    <div><span style="color:var(--ay)">AY</span><b id="rY">—</b></div>
+    <div><span style="color:var(--az)">AZ</span><b id="rZ">—</b></div>
+  </div>
+  <div class="bar">
+    <div class="seg" id="segU">
+      <button data-v="g" class="on">g</button>
+      <button data-v="ms2">m/s²</button>
+    </div>
+    <div class="seg" id="segV">
+      <button data-v="mag" class="on">|a|</button>
+      <button data-v="xyz">x y z</button>
+    </div>
     <span class="s" id="rTag">센서 대기</span>
   </div>
 </div>
 
+<!-- 기록지 -->
 <div class="card">
   <div class="chan">
-    <div class="lab"><b style="color:var(--pen-a)">가속도 |a| · 0.4–1.6 g</b><span class="now" id="cA">—</span></div>
+    <div class="lab">
+      <b style="color:var(--pen-a)" id="labA">가속도</b>
+      <span class="now"><em id="ivA"></em><span id="cA">—</span></span>
+    </div>
     <canvas id="chA"></canvas>
   </div>
   <div class="chan">
-    <div class="lab"><b style="color:var(--pen-b)">각속도 ω · ±200 °/s</b><span class="now" id="cB">—</span></div>
+    <div class="lab">
+      <b style="color:var(--pen-b)">각속도 ω · ±200 °/s</b>
+      <span class="now"><em id="ivB"></em><span id="cB">—</span></span>
+    </div>
     <canvas id="chB"></canvas>
   </div>
+  <p class="legend" id="legend"></p>
 </div>
 
+<!-- 조작 -->
 <div class="card">
   <div class="ctrl">
     <button class="wide" id="bStart">센서 켜기</button>
@@ -120,6 +153,7 @@ th:first-child,td:first-child{text-align:left}
   </div>
 </div>
 
+<!-- 주기 -->
 <div class="card">
   <div class="per">
     <div class="k">측정된 주기 T</div>
@@ -132,18 +166,10 @@ th:first-child,td:first-child{text-align:left}
   </div>
 </div>
 
-<details><summary>축별 값</summary>
-  <div class="axes">
-    <div><span>AX</span><b id="rX">—</b></div>
-    <div><span>AY</span><b id="rY">—</b></div>
-    <div><span>AZ</span><b id="rZ">—</b></div>
-  </div>
-</details>
-
 <details><summary>최근 기록</summary>
   <table>
-    <thead><tr><th>t (s)</th><th>|a| (g)</th><th>ω (°/s)</th></tr></thead>
-    <tbody id="tb"><tr><td colspan="3" style="text-align:center;color:var(--ink-2);padding:14px">기록을 시작하면 표시됩니다</td></tr></tbody>
+    <thead id="th"></thead>
+    <tbody id="tb"><tr><td style="text-align:center;color:var(--ink-2);padding:14px">기록을 시작하면 표시됩니다</td></tr></tbody>
   </table>
 </details>
 
@@ -179,13 +205,64 @@ if (!(location.protocol === 'https:' || location.hostname === 'localhost')){
   log('경고: 보안 컨텍스트 아님 (' + location.protocol + ')', 'w');
 }
 
-/* ══ B. 값 보관소 ══════════════════════════════════════════ */
+/* ══ B. 단위와 보기 방식 ═══════════════════════════════════
+   값은 항상 g 단위로 보관하고, 보여줄 때만 변환합니다.
+   |a| 는 항상 양수라 세로축이 0.4~1.6, 성분은 부호가 있어
+   0을 가운데 둔 ±1.6 을 씁니다.                              */
+const UNITS = {
+  g:   {name:'g',    k:1,       dec:3, sfx:'_g',
+        mag:{lo:0.4, hi:1.6, rows:6, mid:3, txt:'1.0 g'},
+        xyz:{span:1.6, rows:8, mid:4, txt:'0'}},
+  ms2: {name:'m/s²', k:9.80665, dec:2, sfx:'_ms2',
+        mag:{lo:4, hi:16, rows:6, mid:3, txt:'10 m/s²'},
+        xyz:{span:16, rows:8, mid:4, txt:'0'}}
+};
+let U = UNITS.g;
+let VIEW = 'mag';                       // 'mag' 또는 'xyz'
+const toU = v => v * U.k;
+
+document.getElementById('segU').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  U = UNITS[b.dataset.v];
+  for (const x of document.querySelectorAll('#segU button')) x.classList.toggle('on', x === b);
+  apply();
+});
+document.getElementById('segV').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  VIEW = b.dataset.v;
+  for (const x of document.querySelectorAll('#segV button')) x.classList.toggle('on', x === b);
+  apply();
+});
+
+function apply(){
+  const isMag = VIEW === 'mag';
+  document.getElementById('one').hidden   = !isMag;
+  document.getElementById('three').hidden =  isMag;
+  document.getElementById('rUnit').textContent = U.name;
+
+  document.getElementById('labA').textContent = isMag
+    ? `가속도 크기 |a| · ${U.mag.lo}–${U.mag.hi} ${U.name}`
+    : `가속도 성분 · ±${U.xyz.span} ${U.name}`;
+
+  document.getElementById('legend').innerHTML = isMag
+    ? '● 극대점 · 가속도는 점 간격 <b>× 2 = 주기</b>, 각속도는 점 간격 <b>= 주기</b>'
+    : '<span class="key" style="background:var(--ax)"></span>ax'
+    + '<span class="key" style="background:var(--ay);margin-left:12px"></span>ay'
+    + '<span class="key" style="background:var(--az);margin-left:12px"></span>az'
+    + '<br>성분 보기에서는 극대점을 표시하지 않습니다. 주기 계산은 |a| 로 계속 진행됩니다.';
+
+  document.getElementById('th').innerHTML = isMag
+    ? `<tr><th>t (s)</th><th>|a| (${U.name})</th><th>ω (°/s)</th></tr>`
+    : `<tr><th>t (s)</th><th>ax</th><th>ay</th><th>az</th><th>ω</th></tr>`;
+}
+
+/* ══ C. 값 보관소 ══════════════════════════════════════════ */
 const G = 9.80665;
 let sensorOn = false, recording = false, t0 = 0;
 let rows = [], ring = [];
 let live = {mag:0, x:0, y:0, z:0, w:0};
 
-/* ══ C. 센서 켜기 ══════════════════════════════════════════ */
+/* ══ D. 센서 켜기 ══════════════════════════════════════════ */
 const bStart = document.getElementById('bStart');
 const bRec   = document.getElementById('bRec');
 const bCsv   = document.getElementById('bCsv');
@@ -210,7 +287,7 @@ bStart.addEventListener('click', async () => {
     bStart.textContent = '센서 켜짐';
     bRec.disabled = false;
     setTag('센서 켜짐');
-    log('센서 켜짐');
+    log('센서 켜짐 · 기록하지 않아도 주기는 계산됩니다');
     keepAwake();
     setTimeout(() => { if (rawCount === 0)
       log('센서 값이 들어오지 않습니다. 센서가 없는 기기일 수 있습니다.', 'w'); }, 2000);
@@ -237,7 +314,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && sensorOn && !wl) keepAwake();
 });
 
-/* ══ D. 센서 값 받기 ═══════════════════════════════════════ */
+/* ══ E. 센서 값 받기 ═══════════════════════════════════════ */
 let rawCount = 0, warnedNull = false;
 let axisPick = 'alpha', axisAcc = {alpha:0, beta:0, gamma:0}, axisAt = 0;
 
@@ -267,21 +344,23 @@ function onMotion(e){
   }
 
   live = {mag, x, y, z, w};
-  ring.push({t:now, mag, w});
+  ring.push({t:now, mag, x, y, z, w});
   while (ring.length && now - ring[0].t > 10000) ring.shift();
 
+  /* 극대점 찾기는 보기 방식과 무관하게 |a| 로 항상 돕니다 */
+  peakAccel(now, mag);
+  peakGyro(now, w);
+
   if (recording){
-    const t = (now - t0)/1000;
-    rows.push({t, mag, x, y, z, w, gx:r?r.alpha:null, gy:r?r.beta:null, gz:r?r.gamma:null});
-    periodFromAccel(t, mag);
-    periodFromGyro(t, w);
+    rows.push({t:(now-t0)/1000, mag, x, y, z, w,
+               gx:r?r.alpha:null, gy:r?r.beta:null, gz:r?r.gamma:null});
     if (rows.length === 200000){ stopRec(); log('샘플 20만 개 도달, 자동 정지.', 'w'); }
   }
 }
 
-/* ══ E. 주기 계산 ══════════════════════════════════════════
-   |a| 는 1주기에 두 번 최대 → 잰 간격의 2배가 주기
-   ω  는 1주기에 한 번 같은 방향으로 0 통과 → 그대로 주기     */
+/* ══ F. 극대점 찾기와 주기 계산 ════════════════════════════
+   |a| 의 극대점은 1주기에 두 번(최하점 통과) → 간격 × 2 = 주기
+   ω  의 양의 극대점은 1주기에 한 번         → 간격     = 주기   */
 const median = v => { const s = [...v].sort((a,b)=>a-b); return s[s.length>>1]; };
 let pa = null, pb = null;
 
@@ -292,44 +371,54 @@ function showPeriod(){
   document.getElementById('pA').textContent = (pa === null) ? '—' : pa.toFixed(3) + ' s';
   document.getElementById('pB').textContent = (pb === null) ? '—' : pb.toFixed(3) + ' s';
 }
+function commit(s, minIv, maxIv){
+  s.peaks.push({t:s.pt, v:s.pv});
+  if (s.peaks.length > 60) s.peaks.shift();
+  if (s.last !== null){
+    const iv = (s.pt - s.last)/1000;
+    if (iv > minIv && iv < maxIv){ s.iv.push(iv); if (s.iv.length > 7) s.iv.shift(); }
+  }
+  s.last = s.pt;
+}
 
-const accSt = {buf:[], below:false, last:null, iv:[]};
-function periodFromAccel(t, mag){
-  const s = accSt;
-  s.buf.push(mag); if (s.buf.length > 240) s.buf.shift();
-  if (s.buf.length < 60) return;
-  const mean = s.buf.reduce((p,c)=>p+c,0)/s.buf.length;
-  const h = Math.max((Math.max(...s.buf)-Math.min(...s.buf))*0.15, 0.01);
-  if (mag < mean - h) s.below = true;
-  else if (s.below && mag > mean + h){
-    s.below = false;
-    if (s.last !== null){
-      const iv = t - s.last;
-      if (iv > 0.08 && iv < 10){ s.iv.push(iv); if (s.iv.length > 7) s.iv.shift(); }
-    }
-    s.last = t;
-    if (s.iv.length >= 3){ pa = median(s.iv)*2; showPeriod(); }
+const A = {buf:[], above:false, pv:0, pt:0, last:null, iv:[], peaks:[]};
+function peakAccel(now, mag){
+  A.buf.push(mag); if (A.buf.length > 240) A.buf.shift();
+  if (A.buf.length < 60) return;
+  let mn = Infinity, mx = -Infinity, sum = 0;
+  for (const v of A.buf){ if (v < mn) mn = v; if (v > mx) mx = v; sum += v; }
+  const mean = sum/A.buf.length;
+  const h = Math.max((mx-mn)*0.15, 0.01);
+  if (mag > mean + h){
+    if (!A.above){ A.above = true; A.pv = mag; A.pt = now; }
+    else if (mag > A.pv){ A.pv = mag; A.pt = now; }
+  } else if (A.above){
+    A.above = false;
+    commit(A, 0.08, 10);
+    if (A.iv.length >= 3){ pa = median(A.iv)*2; showPeriod(); }
   }
 }
 
-const gyrSt = {below:false, last:null, iv:[], amp:0};
-function periodFromGyro(t, w){
-  const s = gyrSt;
-  s.amp = Math.max(s.amp*0.999, Math.abs(w));
-  const h = Math.max(s.amp*0.2, 3);
-  if (w < -h) s.below = true;
-  else if (s.below && w > h){
-    s.below = false;
-    if (s.last !== null){
-      const iv = t - s.last;
-      if (iv > 0.15 && iv < 20){ s.iv.push(iv); if (s.iv.length > 7) s.iv.shift(); }
-    }
-    s.last = t;
-    if (s.iv.length >= 3){ pb = median(s.iv); showPeriod(); }
+const B = {amp:0, above:false, pv:0, pt:0, last:null, iv:[], peaks:[]};
+function peakGyro(now, w){
+  B.amp = Math.max(B.amp*0.999, Math.abs(w));
+  const h = Math.max(B.amp*0.25, 4);
+  if (w > h){
+    if (!B.above){ B.above = true; B.pv = w; B.pt = now; }
+    else if (w > B.pv){ B.pv = w; B.pt = now; }
+  } else if (B.above){
+    B.above = false;
+    commit(B, 0.15, 20);
+    if (B.iv.length >= 3){ pb = median(B.iv); showPeriod(); }
   }
 }
+function resetPeaks(){
+  for (const s of [A, B]){ s.above = false; s.last = null; s.iv = []; s.peaks = []; }
+  A.buf = []; B.amp = 0;
+  pa = pb = null; showPeriod();
+}
 
-/* ══ F. 기록 시작 / 정지 ═══════════════════════════════════ */
+/* ══ G. 기록 시작 / 정지 ═══════════════════════════════════ */
 let delayTimer = null;
 bRec.addEventListener('click', () => {
   if (recording || delayTimer){ stopRec(); return; }
@@ -348,9 +437,7 @@ bRec.addEventListener('click', () => {
 
 function startRec(){
   rows = []; recording = true; t0 = performance.now();
-  accSt.buf = []; accSt.iv = []; accSt.last = null; accSt.below = false;
-  gyrSt.iv = []; gyrSt.last = null; gyrSt.below = false; gyrSt.amp = 0;
-  pa = pb = null; showPeriod();
+  resetPeaks();
   bRec.textContent = '기록 정지'; bRec.classList.add('rec');
   bCsv.disabled = true;
   setTag('기록 중', true);
@@ -378,13 +465,14 @@ function beep(freq, dur){
   }catch(err){}
 }
 
-/* ══ G. CSV ════════════════════════════════════════════════ */
+/* ══ H. CSV — 보기 방식과 무관하게 항상 전부 저장합니다 ════ */
 bCsv.addEventListener('click', () => {
   try{
-    let s = 't_s,a_mag_g,ax_g,ay_g,az_g,w_used_dps,w_alpha,w_beta,w_gamma\n';
+    const k = U.k, e = U.sfx;
+    let s = `t_s,a_mag${e},ax${e},ay${e},az${e},w_used_dps,w_alpha,w_beta,w_gamma\n`;
     for (const r of rows)
-      s += [r.t.toFixed(4), r.mag.toFixed(5), r.x.toFixed(5), r.y.toFixed(5),
-            r.z.toFixed(5), r.w.toFixed(3),
+      s += [r.t.toFixed(4), (r.mag*k).toFixed(5), (r.x*k).toFixed(5),
+            (r.y*k).toFixed(5), (r.z*k).toFixed(5), r.w.toFixed(3),
             r.gx === null ? '' : r.gx.toFixed(3),
             r.gy === null ? '' : r.gy.toFixed(3),
             r.gz === null ? '' : r.gz.toFixed(3)].join(',') + '\n';
@@ -394,19 +482,17 @@ bCsv.addEventListener('click', () => {
     a.download = 'pendulum_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.csv';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    log('CSV 내려받기 · ' + rows.length + '줄');
+    log('CSV 내려받기 · ' + rows.length + '줄 · 단위 ' + U.name);
   }catch(err){ log('CSV 실패: ' + err, 'e'); }
 });
 
-/* ══ H. 화면 그리기 ════════════════════════════════════════
-   ※ 고친 버그: 캔버스 높이를 getAttribute('height')로 되읽었는데,
-     c.height 에 값을 넣는 순간 그 속성이 덮어써집니다. 그래서
-     크기를 다시 계산할 때마다 화면배율만큼 세로로 늘어났습니다.
-     (모바일은 스크롤로 주소창이 숨겨질 때 resize 가 발생합니다.)
-     이제 높이를 상수로 고정하고 절대 되읽지 않습니다.          */
+/* ══ I. 화면 그리기 ════════════════════════════════════════
+   ※ 캔버스 높이는 상수로 고정하고 절대 되읽지 않습니다.       */
 const H_A = 148, H_B = 100;
 const chA = document.getElementById('chA'), ctxA = chA.getContext('2d');
 const chB = document.getElementById('chB'), ctxB = chB.getContext('2d');
+const PEN_A = '#B23A2E', PEN_B = '#1D6E6E';
+const CX = '#B23A2E', CY = '#2F7A4F', CZ = '#2F5FA0';
 
 function fit(c, cssH){
   const d = Math.min(window.devicePixelRatio || 1, 2);
@@ -430,12 +516,18 @@ window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(refi
 window.addEventListener('orientationchange', () => setTimeout(refit, 300));
 window.addEventListener('load', refit);
 
-/* 세로축 범위는 고정입니다 — 자동으로 확대하지 않습니다 */
-const A_LO = 0.4, A_HI = 1.6, W_MAX = 200;
+const W_MAX = 200;                       // 각속도 세로축 ±200 °/s (고정)
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const mapMag = (v, d) => {
+  const c = U.mag;
+  return d.h - clamp((toU(v) - c.lo)/(c.hi - c.lo), 0, 1)*d.h;
+};
+const mapSym = (v, d) => d.h/2 - clamp(toU(v)/U.xyz.span, -1, 1)*d.h/2;
+const mapW   = (v, d) => d.h/2 - clamp(v/W_MAX, -1, 1)*d.h/2;
 
 function grid(ctx, d, rowsN, mid, midText){
   ctx.clearRect(0, 0, d.w, d.h);
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1; ctx.setLineDash([]);
   for (let i = 1; i < 10; i++){
     ctx.strokeStyle = '#DDE2DA';
     const x = Math.round(d.w*i/10) + .5;
@@ -452,41 +544,77 @@ function grid(ctx, d, rowsN, mid, midText){
     ctx.fillText(midText, 4, Math.round(d.h*mid/rowsN) - 4);
   }
 }
-function trace(ctx, d, color, map){
+function trace(ctx, d, color, pick, map, head){
   if (ring.length < 2) return;
   const now = ring[ring.length-1].t;
-  ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+  ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+  ctx.lineJoin = 'round'; ctx.setLineDash([]);
   ctx.beginPath();
   let started = false;
   for (const p of ring){
     const x = d.w - (now - p.t)/10000*d.w;
-    const y = map(p, d);
+    const y = map(pick(p), d);
     if (started) ctx.lineTo(x, y); else { ctx.moveTo(x, y); started = true; }
   }
   ctx.stroke();
-  const y = map(ring[ring.length-1], d);
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(d.w, y); ctx.lineTo(d.w-7, y-4.5); ctx.lineTo(d.w-7, y+4.5);
-  ctx.closePath(); ctx.fill();
+  if (head){
+    const y = map(pick(ring[ring.length-1]), d);
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(d.w, y); ctx.lineTo(d.w-7, y-4.5); ctx.lineTo(d.w-7, y+4.5);
+    ctx.closePath(); ctx.fill();
+  }
 }
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+/* 극대점: 점 + 아래로 내려긋는 점선 (간격이 눈에 보이도록) */
+function marks(ctx, d, st, color, map, out){
+  const el = document.getElementById(out);
+  if (!ring.length){ el.textContent = ''; return; }
+  const now = ring[ring.length-1].t;
+  const vis = [];
+  for (const p of st.peaks) if (now - p.t <= 10000) vis.push(p);
+  for (const p of vis){
+    const x = d.w - (now - p.t)/10000*d.w;
+    const y = map(p.v, d);
+    ctx.strokeStyle = color; ctx.globalAlpha = .4; ctx.lineWidth = 1;
+    ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(x, y+4); ctx.lineTo(x, d.h); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 6.2832);
+    ctx.fillStyle = '#FCFDFB'; ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.stroke();
+  }
+  el.textContent = vis.length >= 2
+    ? '점 간격 ' + ((vis[vis.length-1].t - vis[vis.length-2].t)/1000).toFixed(3) + 's ·'
+    : '';
+}
 
 function frame(){
   if (sensorOn){
-    document.getElementById('rMag').textContent = live.mag.toFixed(3);
-    document.getElementById('rX').textContent = live.x.toFixed(3);
-    document.getElementById('rY').textContent = live.y.toFixed(3);
-    document.getElementById('rZ').textContent = live.z.toFixed(3);
-    document.getElementById('cA').textContent = live.mag.toFixed(3) + ' g';
+    const f = v => toU(v).toFixed(U.dec);
+    document.getElementById('rMag').textContent = f(live.mag);
+    document.getElementById('rX').textContent = f(live.x);
+    document.getElementById('rY').textContent = f(live.y);
+    document.getElementById('rZ').textContent = f(live.z);
+    document.getElementById('cA').textContent = VIEW === 'mag'
+      ? f(live.mag) + ' ' + U.name
+      : `${f(live.x)} / ${f(live.y)} / ${f(live.z)}`;
     document.getElementById('cB').textContent = live.w.toFixed(0) + ' °/s';
   }
-  grid(ctxA, dimA, 6, 3, '1.0 g');
-  trace(ctxA, dimA, '#B23A2E',
-        (p, d) => d.h - clamp((p.mag - A_LO)/(A_HI - A_LO), 0, 1)*d.h);
+
+  if (VIEW === 'mag'){
+    grid(ctxA, dimA, U.mag.rows, U.mag.mid, U.mag.txt);
+    trace(ctxA, dimA, PEN_A, p => p.mag, mapMag, true);
+    marks(ctxA, dimA, A, PEN_A, mapMag, 'ivA');
+  } else {
+    grid(ctxA, dimA, U.xyz.rows, U.xyz.mid, U.xyz.txt);
+    trace(ctxA, dimA, CX, p => p.x, mapSym, false);
+    trace(ctxA, dimA, CY, p => p.y, mapSym, false);
+    trace(ctxA, dimA, CZ, p => p.z, mapSym, false);
+    document.getElementById('ivA').textContent = '';
+  }
+
   grid(ctxB, dimB, 4, 2, '0');
-  trace(ctxB, dimB, '#1D6E6E',
-        (p, d) => d.h/2 - clamp(p.w/W_MAX, -1, 1)*d.h/2);
+  trace(ctxB, dimB, PEN_B, p => p.w, mapW, true);
+  marks(ctxB, dimB, B, PEN_B, mapW, 'ivB');
 
   if (recording){
     document.getElementById('sN').textContent = rows.length;
@@ -494,13 +622,17 @@ function frame(){
   }
   requestAnimationFrame(frame);
 }
+apply();
 requestAnimationFrame(frame);
 
 /* 표는 초당 5번만 갱신 (60번 갱신하면 화면이 버벅입니다) */
 setInterval(() => {
   if (!recording || rows.length === 0) return;
+  const f = v => toU(v).toFixed(U.dec);
   document.getElementById('tb').innerHTML = rows.slice(-10).reverse().map(r =>
-    `<tr><td>${r.t.toFixed(2)}</td><td>${r.mag.toFixed(4)}</td><td>${r.w.toFixed(1)}</td></tr>`
+    VIEW === 'mag'
+      ? `<tr><td>${r.t.toFixed(2)}</td><td>${f(r.mag)}</td><td>${r.w.toFixed(1)}</td></tr>`
+      : `<tr><td>${r.t.toFixed(2)}</td><td>${f(r.x)}</td><td>${f(r.y)}</td><td>${f(r.z)}</td><td>${r.w.toFixed(1)}</td></tr>`
   ).join('');
 }, 200);
 </script>
