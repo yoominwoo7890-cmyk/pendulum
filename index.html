@@ -5,17 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>진자 가속도 기록계</title>
 <style>
-/* ═══ 색과 글꼴 ═══════════════════════════════════════════ */
 :root{
-  --paper:#E8EAE4;      /* 그래프 용지 바탕 */
-  --panel:#F2F3EF;      /* 판독창 안쪽 */
-  --grid:#C6CCC4;       /* 격자 얇은 선 */
-  --grid-2:#A8B1A6;     /* 격자 굵은 선 */
-  --ink:#1F2421;        /* 본문 잉크 */
-  --ink-2:#5B635C;      /* 보조 잉크 */
-  --pen-a:#B23A2E;      /* 1채널 펜: 가속도 */
-  --pen-b:#1D6E6E;      /* 2채널 펜: 각속도 */
-  --warn:#8A5A00;
+  --paper:#E9EBE5; --panel:#F5F6F2; --line:#CFD5CD;
+  --ink:#1E2320; --ink-2:#6A726B;
+  --pen-a:#B23A2E; --pen-b:#1D6E6E; --warn:#8A5A00;
   --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,"Noto Sans KR",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
 }
@@ -23,244 +16,176 @@
 body{
   margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
   font-size:15px;line-height:1.5;
-  padding:16px 14px calc(24px + env(safe-area-inset-bottom));
-  max-width:660px;margin-inline:auto;
+  padding:14px 14px calc(28px + env(safe-area-inset-bottom));
+  max-width:620px;margin-inline:auto;
 }
-/* ═══ 머리말 ═══════════════════════════════════════════════ */
-.eyebrow{
-  font-family:var(--mono);font-size:11px;letter-spacing:.16em;
-  color:var(--ink-2);margin:0 0 4px;
-}
-h1{font-size:19px;font-weight:600;margin:0 0 16px;letter-spacing:-.01em}
+h1{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-bottom:10px}
 
-/* ═══ 공통 블록 ═════════════════════════════════════════════ */
-.block{
-  background:var(--panel);border:1px solid var(--grid-2);
-  border-radius:3px;margin-bottom:14px;
-}
-.block > h2{
-  font-size:11px;font-family:var(--mono);letter-spacing:.14em;
-  color:var(--ink-2);margin:0;padding:8px 12px;
-  border-bottom:1px solid var(--grid);font-weight:500;
-}
-.pad{padding:12px}
+/* 판독창 */
+.read{display:flex;align-items:baseline;gap:7px;padding:16px 14px 14px}
+.read .v{font-family:var(--mono);font-size:clamp(46px,16vw,66px);font-weight:500;
+  letter-spacing:-.035em;line-height:.85;font-variant-numeric:tabular-nums}
+.read .u{font-family:var(--mono);font-size:17px;color:var(--ink-2)}
+.read .s{margin-left:auto;font-size:12px;color:var(--ink-2);align-self:center}
+.read .s.on{color:var(--pen-a);font-weight:500}
 
-/* ═══ 대형 판독창 ═══════════════════════════════════════════ */
-.readout{display:flex;align-items:baseline;gap:8px;padding:14px 12px 6px}
-.readout .val{
-  font-family:var(--mono);font-size:clamp(44px,15vw,64px);
-  font-weight:500;letter-spacing:-.03em;line-height:.9;
-  font-variant-numeric:tabular-nums;
-}
-.readout .unit{font-family:var(--mono);font-size:18px;color:var(--ink-2)}
-.readout .tag{
-  margin-left:auto;font-family:var(--mono);font-size:11px;
-  letter-spacing:.1em;color:var(--ink-2);align-self:flex-start;padding-top:6px;
-}
-.axes{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
-  background:var(--grid);border-top:1px solid var(--grid);
-}
-.axes div{background:var(--panel);padding:7px 12px}
-.axes span{
-  display:block;font-family:var(--mono);font-size:10px;
-  letter-spacing:.12em;color:var(--ink-2);
-}
-.axes b{
-  font-family:var(--mono);font-size:15px;font-weight:500;
-  font-variant-numeric:tabular-nums;
-}
+/* 기록지 */
+.chan{padding:11px 14px 0}
+.chan:last-of-type{padding-bottom:14px}
+.lab{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:11.5px;color:var(--ink-2);margin-bottom:5px}
+.lab b{font-weight:500}
+.lab .now{font-family:var(--mono);font-variant-numeric:tabular-nums}
+canvas{display:block;width:100%;border:1px solid var(--line);background:#FCFDFB}
 
-/* ═══ 기록계 차트 ═══════════════════════════════════════════ */
-.chan{padding:10px 12px 4px}
-.chan-lab{
-  display:flex;justify-content:space-between;align-items:baseline;
-  font-family:var(--mono);font-size:10px;letter-spacing:.12em;
-  color:var(--ink-2);margin-bottom:5px;
-}
-canvas{display:block;width:100%;border:1px solid var(--grid-2);background:#FBFCFA}
-.pen-a{color:var(--pen-a)}
-.pen-b{color:var(--pen-b)}
-
-/* ═══ 조작부 ═══════════════════════════════════════════════ */
+/* 버튼 */
 .ctrl{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
-button{
-  font-family:var(--sans);font-size:15px;font-weight:500;
-  padding:15px 10px;border-radius:3px;border:1px solid var(--ink);
-  background:var(--ink);color:var(--paper);cursor:pointer;
-}
+button{font-family:var(--sans);font-size:15px;font-weight:500;padding:15px 8px;
+  border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer}
 button.ghost{background:transparent;color:var(--ink)}
-button:disabled{opacity:.35;cursor:default}
+button:disabled{opacity:.3;cursor:default}
 button.wide{grid-column:1/-1}
-button.rec{background:var(--pen-a);border-color:var(--pen-a);color:#fff}
-.opt{
-  grid-column:1/-1;display:flex;align-items:center;gap:9px;
-  font-size:13px;color:var(--ink-2);padding-top:2px;
-}
-.opt input{width:19px;height:19px;accent-color:var(--pen-a)}
+button.rec{background:var(--pen-a);border-color:var(--pen-a)}
+.opt{grid-column:1/-1;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2)}
+.opt input{width:18px;height:18px;accent-color:var(--pen-a);flex:none}
 
-/* ═══ 요약 수치 ═════════════════════════════════════════════ */
-.sum{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--grid);
-}
-.sum div{background:var(--panel);padding:9px 12px}
-.sum span{
-  display:block;font-family:var(--mono);font-size:10px;
-  letter-spacing:.1em;color:var(--ink-2);
-}
-.sum b{
-  font-family:var(--mono);font-size:17px;font-weight:500;
-  font-variant-numeric:tabular-nums;
-}
-.sum .note{font-size:11px;color:var(--ink-2);font-family:var(--sans);letter-spacing:0}
+/* 주기 */
+.per{padding:14px}
+.per .k{font-size:11.5px;color:var(--ink-2);margin-bottom:3px}
+.per .big{font-family:var(--mono);font-size:38px;font-weight:500;line-height:1;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.per .big small{font-size:15px;color:var(--ink-2);font-weight:400}
+.per .sub{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink-2)}
+.per .sub span{font-family:var(--mono);color:var(--ink)}
 
-/* ═══ 표 ═══════════════════════════════════════════════════ */
+/* 접히는 칸 */
+details{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-bottom:10px}
+summary{padding:11px 14px;font-size:13px;color:var(--ink-2);cursor:pointer;
+  list-style:none;display:flex;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"▾";font-size:11px}
+details[open] summary{border-bottom:1px solid var(--line)}
+details[open] summary::after{content:"▴"}
+
+.axes{display:grid;grid-template-columns:repeat(3,1fr)}
+.axes div{padding:10px 14px}
+.axes span{display:block;font-size:10.5px;color:var(--ink-2);letter-spacing:.08em}
+.axes b{font-family:var(--mono);font-size:15px;font-weight:500;font-variant-numeric:tabular-nums}
+
 table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
-th,td{
-  padding:4px 12px;text-align:right;font-variant-numeric:tabular-nums;
-  border-bottom:1px solid var(--grid);
-}
-th{font-size:10px;letter-spacing:.1em;color:var(--ink-2);font-weight:500}
+th,td{padding:5px 14px;text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:nth-child(odd){background:#EFF1EC}
+th{font-size:10.5px;color:var(--ink-2);font-weight:500}
 th:first-child,td:first-child{text-align:left}
-tbody tr:last-child td{border-bottom:none}
 
-/* ═══ 상태 기록 ═════════════════════════════════════════════ */
-#log{
-  font-family:var(--mono);font-size:11.5px;line-height:1.7;
-  padding:10px 12px;max-height:180px;overflow-y:auto;
-  color:var(--ink-2);white-space:pre-wrap;word-break:break-all;
-}
+#log{font-family:var(--mono);font-size:11.5px;line-height:1.7;padding:10px 14px;
+  max-height:170px;overflow-y:auto;color:var(--ink-2);white-space:pre-wrap;word-break:break-all}
 #log .e{color:var(--pen-a)}
 #log .w{color:var(--warn)}
-.banner{
-  background:var(--warn);color:#fff;padding:11px 13px;border-radius:3px;
-  font-size:13.5px;margin-bottom:14px;
-}
-.hint{font-size:12.5px;color:var(--ink-2);margin:-4px 0 16px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.banner{background:var(--warn);color:#fff;padding:11px 13px;border-radius:4px;
+  font-size:13.5px;margin-bottom:10px}
+.tip{font-size:12px;color:var(--ink-2);margin:14px 2px 0;line-height:1.6}
 </style>
 </head>
 <body>
 
-<p class="eyebrow">2채널 기록계 · 단진자용</p>
 <h1>진자 가속도 기록계</h1>
-
 <div id="banner"></div>
 
-<!-- ────── 1. 판독창 ────── -->
-<div class="block">
-  <div class="readout">
-    <span class="val" id="rMag">—</span>
-    <span class="unit">g</span>
-    <span class="tag" id="rTag">센서 대기</span>
+<div class="card">
+  <div class="read">
+    <span class="v" id="rMag">—</span><span class="u">g</span>
+    <span class="s" id="rTag">센서 대기</span>
   </div>
+</div>
+
+<div class="card">
+  <div class="chan">
+    <div class="lab"><b style="color:var(--pen-a)">가속도 |a| · 0.4–1.6 g</b><span class="now" id="cA">—</span></div>
+    <canvas id="chA"></canvas>
+  </div>
+  <div class="chan">
+    <div class="lab"><b style="color:var(--pen-b)">각속도 ω · ±200 °/s</b><span class="now" id="cB">—</span></div>
+    <canvas id="chB"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ctrl">
+    <button class="wide" id="bStart">센서 켜기</button>
+    <button id="bRec" disabled>기록 시작</button>
+    <button class="ghost" id="bCsv" disabled>CSV 내려받기</button>
+    <label class="opt"><input type="checkbox" id="oDelay" checked>5초 뒤 시작 (소리로 알림)</label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="per">
+    <div class="k">측정된 주기 T</div>
+    <div class="big" id="pMain">—</div>
+    <div class="sub">
+      <div>각속도에서 <span id="pB">—</span></div>
+      <div>가속도에서 <span id="pA">—</span></div>
+      <div><span id="sN">0</span>샘플 · <span id="sT">0.0</span>s</div>
+    </div>
+  </div>
+</div>
+
+<details><summary>축별 값</summary>
   <div class="axes">
     <div><span>AX</span><b id="rX">—</b></div>
     <div><span>AY</span><b id="rY">—</b></div>
     <div><span>AZ</span><b id="rZ">—</b></div>
   </div>
-</div>
+</details>
 
-<!-- ────── 2. 기록계 ────── -->
-<div class="block">
-  <h2>기록지 · 최근 10초</h2>
-  <div class="chan">
-    <div class="chan-lab">
-      <span class="pen-a">1채널 · 가속도 크기 |a| · 0–2 g</span>
-      <span id="cA">—</span>
-    </div>
-    <canvas id="chA" height="150"></canvas>
-  </div>
-  <div class="chan">
-    <div class="chan-lab">
-      <span class="pen-b">2채널 · 각속도 ω · ±300 °/s</span>
-      <span id="cB">—</span>
-    </div>
-    <canvas id="chB" height="110"></canvas>
-  </div>
-  <div style="height:8px"></div>
-</div>
-
-<!-- ────── 3. 조작 ────── -->
-<div class="block">
-  <div class="ctrl">
-    <button class="wide" id="bStart">센서 켜기</button>
-    <button id="bRec" disabled>기록 시작</button>
-    <button class="ghost" id="bCsv" disabled>CSV 내려받기</button>
-    <label class="opt"><input type="checkbox" id="oDelay" checked>5초 뒤에 기록 시작 (소리로 알림)</label>
-  </div>
-</div>
-
-<!-- ────── 4. 요약 ────── -->
-<div class="block">
-  <h2>측정 요약</h2>
-  <div class="sum">
-    <div><span>샘플 수</span><b id="sN">0</b></div>
-    <div><span>경과 시간</span><b id="sT">0.0<small style="font-size:11px"> s</small></b></div>
-    <div><span>주기 T · 가속도에서</span><b id="sPa">—</b><em class="note">|a| 진동의 2배</em></div>
-    <div><span>주기 T · 각속도에서</span><b id="sPb">—</b><em class="note">직접 측정값</em></div>
-  </div>
-</div>
-
-<!-- ────── 5. 최근 기록 ────── -->
-<div class="block">
-  <h2>최근 기록 12줄</h2>
+<details><summary>최근 기록</summary>
   <table>
-    <thead><tr><th>t (s)</th><th>|a| (g)</th><th>ax</th><th>ay</th><th>az</th></tr></thead>
-    <tbody id="tb"><tr><td colspan="5" style="text-align:center;color:var(--ink-2)">기록을 시작하면 표시됩니다</td></tr></tbody>
+    <thead><tr><th>t (s)</th><th>|a| (g)</th><th>ω (°/s)</th></tr></thead>
+    <tbody id="tb"><tr><td colspan="3" style="text-align:center;color:var(--ink-2);padding:14px">기록을 시작하면 표시됩니다</td></tr></tbody>
   </table>
-</div>
+</details>
 
-<!-- ────── 6. 상태 기록 ────── -->
-<div class="block">
-  <h2>상태 기록 · 문제가 생기면 이 칸을 저에게 보여주세요</h2>
+<details id="dLog"><summary><span>상태 기록</span><span id="logTag"></span></summary>
   <div id="log"></div>
-</div>
+</details>
 
-<p class="hint">
-  화면 자동 회전을 잠그고, 폰을 케이스에 넣어 끈으로 단단히 매달아 주세요.
-  진폭은 30–40°로 크게 잡으면 신호가 뚜렷해집니다.
-</p>
+<p class="tip">화면 자동 회전을 잠그고, 폰을 케이스에 넣어 끈으로 단단히 매다세요. 진폭 30–40°에서 신호가 가장 뚜렷합니다.</p>
 
 <script>
-/* ══════════════════════════════════════════════════════════
-   구역 A — 상태 기록 (폰에서는 개발자 콘솔을 볼 수 없으므로
-             오류를 화면에 직접 찍습니다)
-   ══════════════════════════════════════════════════════════ */
+/* ══ A. 상태 기록 ══════════════════════════════════════════ */
 const logEl = document.getElementById('log');
+let errN = 0;
 function log(msg, kind){
   const t = new Date().toTimeString().slice(0,8);
-  const span = document.createElement('span');
-  if (kind) span.className = kind;
-  span.textContent = `[${t}] ${msg}\n`;
-  logEl.appendChild(span);
+  const s = document.createElement('span');
+  if (kind) s.className = kind;
+  s.textContent = `[${t}] ${msg}\n`;
+  logEl.appendChild(s);
   logEl.scrollTop = logEl.scrollHeight;
+  if (kind === 'e'){
+    errN++;
+    document.getElementById('logTag').textContent = '오류 ' + errN + '건';
+    document.getElementById('dLog').open = true;
+  }
 }
 window.addEventListener('error', e => log('오류: ' + e.message, 'e'));
 window.addEventListener('unhandledrejection', e => log('오류(비동기): ' + e.reason, 'e'));
-
-/* 시작 환경 점검 */
 log('페이지 열림 · ' + navigator.userAgent.slice(0,60));
-const secure = location.protocol === 'https:' || location.hostname === 'localhost';
-if (!secure){
+if (!(location.protocol === 'https:' || location.hostname === 'localhost')){
   document.getElementById('banner').innerHTML =
-    '<div class="banner">HTTPS가 아니어서 센서를 쓸 수 없습니다. GitHub Pages 같은 https 주소로 열어 주세요.</div>';
-  log('경고: 보안 컨텍스트가 아닙니다 (' + location.protocol + ')', 'w');
+    '<div class="banner">HTTPS가 아니어서 센서를 쓸 수 없습니다. https 주소로 열어 주세요.</div>';
+  log('경고: 보안 컨텍스트 아님 (' + location.protocol + ')', 'w');
 }
 
-/* ══════════════════════════════════════════════════════════
-   구역 B — 값 보관소
-   ══════════════════════════════════════════════════════════ */
+/* ══ B. 값 보관소 ══════════════════════════════════════════ */
 const G = 9.80665;
-let sensorOn = false, recording = false;
-let t0 = 0;                  // 기록 시작 시각
-let rows = [];               // 저장된 전체 샘플 (CSV용)
-let ring = [];               // 화면 표시용 최근 10초
+let sensorOn = false, recording = false, t0 = 0;
+let rows = [], ring = [];
 let live = {mag:0, x:0, y:0, z:0, w:0};
 
-/* ══════════════════════════════════════════════════════════
-   구역 C — 센서 켜기 (iOS는 버튼 누른 순간에만 권한 요청 가능)
-   ══════════════════════════════════════════════════════════ */
+/* ══ C. 센서 켜기 ══════════════════════════════════════════ */
 const bStart = document.getElementById('bStart');
 const bRec   = document.getElementById('bRec');
 const bCsv   = document.getElementById('bCsv');
@@ -273,11 +198,10 @@ bStart.addEventListener('click', async () => {
       bStart.disabled = false; return;
     }
     if (typeof DeviceMotionEvent.requestPermission === 'function'){
-      log('권한 요청 중…');
       const res = await DeviceMotionEvent.requestPermission();
       log('권한 응답: ' + res);
       if (res !== 'granted'){
-        log('권한이 거부되었습니다. Safari 설정에서 동작 및 방향 접근을 허용해 주세요.', 'e');
+        log('권한 거부됨. 설정 > Safari > 동작 및 방향 접근을 켜 주세요.', 'e');
         bStart.disabled = false; return;
       }
     }
@@ -285,36 +209,35 @@ bStart.addEventListener('click', async () => {
     sensorOn = true;
     bStart.textContent = '센서 켜짐';
     bRec.disabled = false;
-    document.getElementById('rTag').textContent = '센서 켜짐 · 미기록';
+    setTag('센서 켜짐');
     log('센서 켜짐');
     keepAwake();
     setTimeout(() => { if (rawCount === 0)
-      log('센서 값이 들어오지 않습니다. 데스크톱이거나 센서가 없는 기기일 수 있습니다.', 'w');
-    }, 2000);
-  }catch(err){
-    log('센서 켜기 실패: ' + err, 'e');
-    bStart.disabled = false;
-  }
+      log('센서 값이 들어오지 않습니다. 센서가 없는 기기일 수 있습니다.', 'w'); }, 2000);
+  }catch(err){ log('센서 켜기 실패: ' + err, 'e'); bStart.disabled = false; }
 });
 
-/* 화면 꺼짐 방지 */
+function setTag(txt, on){
+  const el = document.getElementById('rTag');
+  el.textContent = txt;
+  el.className = 's' + (on ? ' on' : '');
+}
+
 let wl = null;
 async function keepAwake(){
   try{
     if ('wakeLock' in navigator){
       wl = await navigator.wakeLock.request('screen');
+      wl.addEventListener('release', () => { wl = null; log('화면 꺼짐 방지 해제됨', 'w'); });
       log('화면 꺼짐 방지 켜짐');
-      wl.addEventListener('release', () => log('화면 꺼짐 방지 해제됨', 'w'));
-    } else log('이 브라우저는 화면 꺼짐 방지를 지원하지 않습니다. 절전 시간을 늘려 주세요.', 'w');
+    } else log('화면 꺼짐 방지 미지원. 절전 시간을 늘려 주세요.', 'w');
   }catch(err){ log('화면 꺼짐 방지 실패: ' + err, 'w'); }
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && sensorOn && !wl) keepAwake();
 });
 
-/* ══════════════════════════════════════════════════════════
-   구역 D — 센서 값 받기 (초당 약 60회 호출됩니다)
-   ══════════════════════════════════════════════════════════ */
+/* ══ D. 센서 값 받기 ═══════════════════════════════════════ */
 let rawCount = 0, warnedNull = false;
 let axisPick = 'alpha', axisAcc = {alpha:0, beta:0, gamma:0}, axisAt = 0;
 
@@ -322,14 +245,14 @@ function onMotion(e){
   rawCount++;
   const a = e.accelerationIncludingGravity;
   if (!a || a.x === null){
-    if (!warnedNull){ log('가속도 값이 비어 있습니다(accelerationIncludingGravity=null).', 'e'); warnedNull = true; }
+    if (!warnedNull){ log('가속도 값이 비어 있습니다.', 'e'); warnedNull = true; }
     return;
   }
   const now = performance.now();
   const x = a.x/G, y = a.y/G, z = a.z/G;
-  const mag = Math.sqrt(x*x + y*y + z*z);
+  const mag = Math.hypot(x, y, z);
 
-  /* 각속도: 진자는 한 축으로만 도니, 최근 3초간 가장 크게 흔들린 축을 골라 씀 */
+  /* 진자는 한 축으로만 도니, 최근 3초간 가장 크게 흔들린 축만 사용 */
   let w = 0;
   const r = e.rotationRate;
   if (r && r.alpha !== null){
@@ -344,8 +267,6 @@ function onMotion(e){
   }
 
   live = {mag, x, y, z, w};
-
-  /* 화면 표시용 최근 10초 */
   ring.push({t:now, mag, w});
   while (ring.length && now - ring[0].t > 10000) ring.shift();
 
@@ -354,16 +275,23 @@ function onMotion(e){
     rows.push({t, mag, x, y, z, w, gx:r?r.alpha:null, gy:r?r.beta:null, gz:r?r.gamma:null});
     periodFromAccel(t, mag);
     periodFromGyro(t, w);
-    if (rows.length === 200000){ stopRec(); log('샘플 20만 개에 도달해 자동 정지했습니다.', 'w'); }
+    if (rows.length === 200000){ stopRec(); log('샘플 20만 개 도달, 자동 정지.', 'w'); }
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   구역 E — 주기 계산
-   가속도 |a|는 1주기에 두 번 최대가 되므로 재어진 값을 2배 해야 함.
-   각속도 ω는 1주기에 한 번 같은 방향으로 0을 지나므로 그대로 주기.
-   ══════════════════════════════════════════════════════════ */
-function median(v){ const s=[...v].sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; }
+/* ══ E. 주기 계산 ══════════════════════════════════════════
+   |a| 는 1주기에 두 번 최대 → 잰 간격의 2배가 주기
+   ω  는 1주기에 한 번 같은 방향으로 0 통과 → 그대로 주기     */
+const median = v => { const s = [...v].sort((a,b)=>a-b); return s[s.length>>1]; };
+let pa = null, pb = null;
+
+function showPeriod(){
+  const main = (pb !== null) ? pb : pa;
+  document.getElementById('pMain').innerHTML =
+    (main === null) ? '—' : main.toFixed(3) + ' <small>s</small>';
+  document.getElementById('pA').textContent = (pa === null) ? '—' : pa.toFixed(3) + ' s';
+  document.getElementById('pB').textContent = (pb === null) ? '—' : pb.toFixed(3) + ' s';
+}
 
 const accSt = {buf:[], below:false, last:null, iv:[]};
 function periodFromAccel(t, mag){
@@ -371,8 +299,7 @@ function periodFromAccel(t, mag){
   s.buf.push(mag); if (s.buf.length > 240) s.buf.shift();
   if (s.buf.length < 60) return;
   const mean = s.buf.reduce((p,c)=>p+c,0)/s.buf.length;
-  const amp  = Math.max(...s.buf) - Math.min(...s.buf);
-  const h    = Math.max(amp*0.15, 0.01);
+  const h = Math.max((Math.max(...s.buf)-Math.min(...s.buf))*0.15, 0.01);
   if (mag < mean - h) s.below = true;
   else if (s.below && mag > mean + h){
     s.below = false;
@@ -381,9 +308,7 @@ function periodFromAccel(t, mag){
       if (iv > 0.08 && iv < 10){ s.iv.push(iv); if (s.iv.length > 7) s.iv.shift(); }
     }
     s.last = t;
-    if (s.iv.length >= 3)
-      document.getElementById('sPa').innerHTML =
-        (median(s.iv)*2).toFixed(3) + '<small style="font-size:11px"> s</small>';
+    if (s.iv.length >= 3){ pa = median(s.iv)*2; showPeriod(); }
   }
 }
 
@@ -400,40 +325,35 @@ function periodFromGyro(t, w){
       if (iv > 0.15 && iv < 20){ s.iv.push(iv); if (s.iv.length > 7) s.iv.shift(); }
     }
     s.last = t;
-    if (s.iv.length >= 3)
-      document.getElementById('sPb').innerHTML =
-        median(s.iv).toFixed(3) + '<small style="font-size:11px"> s</small>';
+    if (s.iv.length >= 3){ pb = median(s.iv); showPeriod(); }
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   구역 F — 기록 시작 / 정지
-   ══════════════════════════════════════════════════════════ */
+/* ══ F. 기록 시작 / 정지 ═══════════════════════════════════ */
 let delayTimer = null;
 bRec.addEventListener('click', () => {
   if (recording || delayTimer){ stopRec(); return; }
   if (document.getElementById('oDelay').checked){
     let n = 5;
     bRec.textContent = '시작까지 ' + n;
-    beep(660, 0.08);
+    bRec.classList.add('rec');
+    beep(660, .08);
     delayTimer = setInterval(() => {
       n--;
-      if (n > 0){ bRec.textContent = '시작까지 ' + n; beep(660, 0.08); }
-      else { clearInterval(delayTimer); delayTimer = null; beep(990, 0.25); startRec(); }
+      if (n > 0){ bRec.textContent = '시작까지 ' + n; beep(660, .08); }
+      else { clearInterval(delayTimer); delayTimer = null; beep(990, .25); startRec(); }
     }, 1000);
-    bRec.classList.add('rec');
   } else startRec();
 });
 
 function startRec(){
   rows = []; recording = true; t0 = performance.now();
-  accSt.buf=[]; accSt.iv=[]; accSt.last=null; accSt.below=false;
-  gyrSt.iv=[]; gyrSt.last=null; gyrSt.below=false; gyrSt.amp=0;
-  document.getElementById('sPa').textContent = '—';
-  document.getElementById('sPb').textContent = '—';
+  accSt.buf = []; accSt.iv = []; accSt.last = null; accSt.below = false;
+  gyrSt.iv = []; gyrSt.last = null; gyrSt.below = false; gyrSt.amp = 0;
+  pa = pb = null; showPeriod();
   bRec.textContent = '기록 정지'; bRec.classList.add('rec');
   bCsv.disabled = true;
-  document.getElementById('rTag').textContent = '기록 중';
+  setTag('기록 중', true);
   log('기록 시작');
 }
 function stopRec(){
@@ -441,33 +361,33 @@ function stopRec(){
   recording = false;
   bRec.textContent = '기록 시작'; bRec.classList.remove('rec');
   bCsv.disabled = rows.length === 0;
-  document.getElementById('rTag').textContent = '센서 켜짐 · 미기록';
+  setTag(sensorOn ? '센서 켜짐' : '센서 대기');
   log('기록 정지 · 샘플 ' + rows.length + '개');
 }
 
-/* 카운트다운 알림음 — 진동은 가속도계를 오염시키므로 소리를 씁니다 */
+/* 진동은 가속도계를 오염시키므로 소리로 알립니다 */
 let ac = null;
 function beep(freq, dur){
   try{
     ac = ac || new (window.AudioContext || window.webkitAudioContext)();
     const o = ac.createOscillator(), g = ac.createGain();
     o.frequency.value = freq; o.connect(g); g.connect(ac.destination);
-    g.gain.setValueAtTime(0.25, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    g.gain.setValueAtTime(.25, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + dur);
     o.start(); o.stop(ac.currentTime + dur);
-  }catch(err){ /* 소리는 없어도 기록에는 영향 없음 */ }
+  }catch(err){}
 }
 
-/* ══════════════════════════════════════════════════════════
-   구역 G — CSV 내려받기
-   ══════════════════════════════════════════════════════════ */
+/* ══ G. CSV ════════════════════════════════════════════════ */
 bCsv.addEventListener('click', () => {
   try{
     let s = 't_s,a_mag_g,ax_g,ay_g,az_g,w_used_dps,w_alpha,w_beta,w_gamma\n';
     for (const r of rows)
       s += [r.t.toFixed(4), r.mag.toFixed(5), r.x.toFixed(5), r.y.toFixed(5),
             r.z.toFixed(5), r.w.toFixed(3),
-            r.gx??'', r.gy??'', r.gz??''].join(',') + '\n';
+            r.gx === null ? '' : r.gx.toFixed(3),
+            r.gy === null ? '' : r.gy.toFixed(3),
+            r.gz === null ? '' : r.gz.toFixed(3)].join(',') + '\n';
     const url = URL.createObjectURL(new Blob([s], {type:'text/csv'}));
     const a = document.createElement('a');
     a.href = url;
@@ -478,77 +398,99 @@ bCsv.addEventListener('click', () => {
   }catch(err){ log('CSV 실패: ' + err, 'e'); }
 });
 
-/* ══════════════════════════════════════════════════════════
-   구역 H — 화면 그리기 (초당 60번 지우고 다시 그립니다)
-   ══════════════════════════════════════════════════════════ */
+/* ══ H. 화면 그리기 ════════════════════════════════════════
+   ※ 고친 버그: 캔버스 높이를 getAttribute('height')로 되읽었는데,
+     c.height 에 값을 넣는 순간 그 속성이 덮어써집니다. 그래서
+     크기를 다시 계산할 때마다 화면배율만큼 세로로 늘어났습니다.
+     (모바일은 스크롤로 주소창이 숨겨질 때 resize 가 발생합니다.)
+     이제 높이를 상수로 고정하고 절대 되읽지 않습니다.          */
+const H_A = 148, H_B = 100;
 const chA = document.getElementById('chA'), ctxA = chA.getContext('2d');
 const chB = document.getElementById('chB'), ctxB = chB.getContext('2d');
-function fit(c){
-  const d = window.devicePixelRatio || 1;
-  const w = c.clientWidth, h = parseInt(c.getAttribute('height'));
-  c.width = w*d; c.height = h*d;
-  c.style.height = h + 'px';
-  c.getContext('2d').setTransform(d,0,0,d,0,0);
-  return {w, h};
-}
-let dimA = fit(chA), dimB = fit(chB);
-window.addEventListener('resize', () => { dimA = fit(chA); dimB = fit(chB); });
 
-function grid(ctx, d, lines, mid){
-  ctx.clearRect(0,0,d.w,d.h);
+function fit(c, cssH){
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(c.clientWidth, 1);
+  c.width  = Math.round(w * d);
+  c.height = Math.round(cssH * d);
+  c.style.height = cssH + 'px';
+  c.getContext('2d').setTransform(d, 0, 0, d, 0, 0);
+  return {w:w, h:cssH};
+}
+let dimA = fit(chA, H_A), dimB = fit(chB, H_B);
+let lastW = chA.clientWidth, rt = null;
+function refit(){
+  const w = chA.clientWidth;
+  if (w === lastW || w < 1) return;      // 가로폭이 실제로 변했을 때만
+  lastW = w;
+  dimA = fit(chA, H_A);
+  dimB = fit(chB, H_B);
+}
+window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(refit, 150); });
+window.addEventListener('orientationchange', () => setTimeout(refit, 300));
+window.addEventListener('load', refit);
+
+/* 세로축 범위는 고정입니다 — 자동으로 확대하지 않습니다 */
+const A_LO = 0.4, A_HI = 1.6, W_MAX = 200;
+
+function grid(ctx, d, rowsN, mid, midText){
+  ctx.clearRect(0, 0, d.w, d.h);
   ctx.lineWidth = 1;
-  for (let i = 1; i < 10; i++){                       // 시간 격자 1초마다
-    ctx.strokeStyle = '#C6CCC4'; ctx.beginPath();
+  for (let i = 1; i < 10; i++){
+    ctx.strokeStyle = '#DDE2DA';
     const x = Math.round(d.w*i/10) + .5;
-    ctx.moveTo(x,0); ctx.lineTo(x,d.h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, d.h); ctx.stroke();
   }
-  for (let i = 1; i < lines; i++){                    // 값 격자
-    const y = Math.round(d.h*i/lines) + .5;
-    ctx.strokeStyle = (i === mid) ? '#A8B1A6' : '#DCE0D9';
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(d.w,y); ctx.stroke();
+  for (let i = 1; i < rowsN; i++){
+    const y = Math.round(d.h*i/rowsN) + .5;
+    ctx.strokeStyle = (i === mid) ? '#AEB6AC' : '#DDE2DA';
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(d.w, y); ctx.stroke();
+  }
+  if (midText){
+    ctx.fillStyle = '#8E968C';
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.fillText(midText, 4, Math.round(d.h*mid/rowsN) - 4);
   }
 }
 function trace(ctx, d, color, map){
   if (ring.length < 2) return;
   const now = ring[ring.length-1].t;
-  ctx.strokeStyle = color; ctx.lineWidth = 1.6;
-  ctx.lineJoin = 'round'; ctx.beginPath();
+  ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+  ctx.beginPath();
   let started = false;
   for (const p of ring){
     const x = d.w - (now - p.t)/10000*d.w;
     const y = map(p, d);
-    if (!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+    if (started) ctx.lineTo(x, y); else { ctx.moveTo(x, y); started = true; }
   }
   ctx.stroke();
-  /* 펜 위치 표시 */
   const y = map(ring[ring.length-1], d);
-  ctx.fillStyle = color; ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.beginPath();
   ctx.moveTo(d.w, y); ctx.lineTo(d.w-7, y-4.5); ctx.lineTo(d.w-7, y+4.5);
   ctx.closePath(); ctx.fill();
 }
-const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 function frame(){
-  /* 판독창 */
   if (sensorOn){
-    document.getElementById('rMag').textContent = live.mag.toFixed(4);
+    document.getElementById('rMag').textContent = live.mag.toFixed(3);
     document.getElementById('rX').textContent = live.x.toFixed(3);
     document.getElementById('rY').textContent = live.y.toFixed(3);
     document.getElementById('rZ').textContent = live.z.toFixed(3);
     document.getElementById('cA').textContent = live.mag.toFixed(3) + ' g';
-    document.getElementById('cB').textContent = live.w.toFixed(1) + ' °/s';
+    document.getElementById('cB').textContent = live.w.toFixed(0) + ' °/s';
   }
-  /* 1채널: |a| 0–2 g, 1 g가 가운데 굵은 선 */
-  grid(ctxA, dimA, 8, 4);
-  trace(ctxA, dimA, '#B23A2E', (p,d) => d.h - clamp(p.mag/2,0,1)*d.h);
-  /* 2채널: ω ±300 °/s, 0이 가운데 굵은 선 */
-  grid(ctxB, dimB, 6, 3);
-  trace(ctxB, dimB, '#1D6E6E', (p,d) => d.h/2 - clamp(p.w/300,-1,1)*d.h/2);
+  grid(ctxA, dimA, 6, 3, '1.0 g');
+  trace(ctxA, dimA, '#B23A2E',
+        (p, d) => d.h - clamp((p.mag - A_LO)/(A_HI - A_LO), 0, 1)*d.h);
+  grid(ctxB, dimB, 4, 2, '0');
+  trace(ctxB, dimB, '#1D6E6E',
+        (p, d) => d.h/2 - clamp(p.w/W_MAX, -1, 1)*d.h/2);
 
   if (recording){
     document.getElementById('sN').textContent = rows.length;
-    document.getElementById('sT').innerHTML =
-      ((performance.now()-t0)/1000).toFixed(1) + '<small style="font-size:11px"> s</small>';
+    document.getElementById('sT').textContent = ((performance.now()-t0)/1000).toFixed(1);
   }
   requestAnimationFrame(frame);
 }
@@ -557,10 +499,8 @@ requestAnimationFrame(frame);
 /* 표는 초당 5번만 갱신 (60번 갱신하면 화면이 버벅입니다) */
 setInterval(() => {
   if (!recording || rows.length === 0) return;
-  const last = rows.slice(-12).reverse();
-  document.getElementById('tb').innerHTML = last.map(r =>
-    `<tr><td>${r.t.toFixed(2)}</td><td>${r.mag.toFixed(4)}</td>` +
-    `<td>${r.x.toFixed(3)}</td><td>${r.y.toFixed(3)}</td><td>${r.z.toFixed(3)}</td></tr>`
+  document.getElementById('tb').innerHTML = rows.slice(-10).reverse().map(r =>
+    `<tr><td>${r.t.toFixed(2)}</td><td>${r.mag.toFixed(4)}</td><td>${r.w.toFixed(1)}</td></tr>`
   ).join('');
 }, 200);
 </script>
